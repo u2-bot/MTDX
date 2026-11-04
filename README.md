@@ -33,12 +33,21 @@ changes it. Keep it: a later MTDX update may need to convert again.
 
 ## Updates
 
-1. Download the new release.
-2. Unzip it **over your MTDX folder** and let it overwrite the files.
-3. Start **MTDX.exe** once. It sees what the update changed and makes only those files again from the dump you used last
-   time; an update that changes the conversion itself converts everything again. Then press Play.
+MTDX keeps itself up to date. At every start it looks for a new version (on this project's GitHub release page); when
+there is one, it downloads it, closes, copies it into its folder and starts again by itself. It then sees what the update
+changed and makes only those files again from the dump you used last time (an update that changes the conversion itself
+converts everything again). Then press Play.
 
-Saves are not stored in the MTDX folder, so they always carry over.
+- Untick **Update MTDX automatically** in the window to stop that; **Check for updates** looks (and asks first) whenever
+  you press it.
+- Every update is checked against a signature that only MTDX's own releases carry: a changed or damaged download is never
+  installed. The check reads one small file from github.com; nothing else is sent.
+- While the game is running, MTDX does not update; it does so at its next start.
+- By hand (always possible, and the way up from MTDX 0.1.0, which cannot update itself yet): download the new release,
+  unzip it **over your MTDX folder** and let it overwrite the files, then start **MTDX.exe** once.
+
+Your game data, saves and settings stay through every update: saves are not stored in the MTDX folder, and the game data is
+made again only where the update needs it.
 
 ## Saves and settings
 
@@ -71,7 +80,9 @@ Saves are not stored in the MTDX folder, so they always carry over.
   `RTDX_Data\Plugins\pcsdk.log` (the native layer); attach them to a report.
 - The MTDX window explains every problem it finds with the dump and what to do about it.
 - From a command prompt: `MTDX.exe status`, `MTDX.exe check DUMP`, `MTDX.exe convert [DUMP] [--workers N]`,
-  `MTDX.exe play`.
+  `MTDX.exe play`, `MTDX.exe update [--check]`.
+- An update that did not finish (the window says so): download the release and unzip it over the MTDX folder by hand;
+  **Check for updates** also tries again.
 
 ## Legal
 

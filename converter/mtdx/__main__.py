@@ -7,6 +7,10 @@
   MTDX.exe status [--root DIR]      ready / refresh needed / not converted
   MTDX.exe check DUMP               checks a dump without converting it
   MTDX.exe play [--root DIR]        starts the game
+  MTDX.exe update [--check] [--root DIR]
+                                    looks for a new MTDX; without --check installs it: MTDX downloads it, closes, and the
+                                    new files are copied in a few seconds later (then start MTDX.exe once: it makes what the
+                                    new version needs from your dump)
 Without --root the MTDX folder is the one holding the executable (frozen) or the current folder.
 """
 import os
@@ -114,6 +118,38 @@ def main(argv=None):
             print(f'PROBLEM: the game data is not ready ({st["reason"]}): run MTDX.exe (or MTDX.exe convert) first')
             return 1
         play(root)
+        return 0
+    if cmd == 'update':
+        from . import update
+        only_check = '--check' in args
+        try:
+            r = update.check(p)
+        except update.UpdateError as e:
+            print(f'PROBLEM: updates could not be checked: {e}')
+            return 1
+        e = r['entry']
+        if not e:
+            print(f'MTDX {__version__} is up to date (build {update.current_build(p) or "unknown"})')
+            return 0
+        print(f'{update.summary(e)} is out (build {e["build"]}){": " + e["page"] if e.get("page") else ""}')
+        if only_check:
+            return 0
+        shown = {}
+
+        def progress(done, total):
+            k = done * 10 // max(total, 1)
+            if shown.get('k') != k:
+                shown['k'] = k
+                print(f'downloading: {done / 2 ** 20:.1f} / {total / 2 ** 20:.1f} MiB', flush=True)
+        try:
+            cmd_file = update.prepare_self_update(p, e, log=lambda s: print(s, flush=True), progress=progress,
+                                                  restart=False)
+        except update.UpdateError as x:
+            print(f'PROBLEM: {x}')
+            return 1
+        update.run_self_update(cmd_file)
+        print('MTDX closes now; the new files are copied in a few seconds. Then start MTDX.exe once: it makes what the new '
+              'version needs from your dump.')
         return 0
     print(__doc__)
     return 2

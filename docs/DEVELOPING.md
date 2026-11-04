@@ -72,6 +72,37 @@ of the last conversion. Bundles are made again only when their dump file (size +
 changed (`done_v<N>.log`); the player files, globalgamemanagers and the copies are cheap and are always made again. Rule:
 bump `CONVERT_VERSION` in `converter/mtdx/__init__.py` whenever a change alters the bytes the converter writes for bundles.
 
+## Self-update (`converter/mtdx/update.py`)
+
+Every GitHub release carries, next to `MTDX-<version>-win64.zip`, a small **`mtdx-update.json`**:
+`{"format": 1, "index": "<JSON text>", "sig": "<base64>"}`. The index text is signed (Ed25519, `converter/mtdx/ed25519.py`)
+with the release key whose public half is `update.PUBLIC_KEY`; it holds `{"format": 1, "mtdx": {"version", "build",
+"notes", "page", "asset": {"name", "url", "size", "sha256"}}}`, where `build` = the release's `mtdx/release.json` `made`.
+
+- **Check**: at every start (unless `mtdx/state/config.json` has `"update_auto": false` = the window's tick) MTDX reads
+  `https://github.com/u2-bot/MTDX/releases/latest/download/mtdx-update.json` - the feed of the **latest** release (GitHub's
+  "latest": not a draft, not a pre-release) - verifies the signature and compares `build` with its own `made` (text order of
+  `YYYY-MM-DD HH:MM:SS`). The version number is only shown, never compared. `MTDX_UPDATE_FEED` (environment) or
+  `release.json` `update_feed` replace the address (tests).
+- **Install** (only the frozen `MTDX.exe`; a source tree is updated with git): refused while `RTDX.exe` of the folder runs.
+  The zip goes to `mtdx/state/update/<sha256>.zip` (HTTP Range resumes a stopped download; SHA-256 checked), is unpacked to
+  `mtdx/state/update/new` (no absolute or `..` paths; it must hold `MTDX.exe`, `RTDX.exe` and a `release.json` whose `made`
+  is the feed's build), then `apply_update.cmd` runs in a hidden console: it waits until the MTDX process has ended,
+  `robocopy /E` copies the release over the folder (files the new release no longer has stay, as with unzipping by hand),
+  copies `mtdx/release.json` **last and only when everything else was copied**, cleans up and starts `MTDX.exe` again,
+  which then refreshes the game data like after a manual update (`install.status()`).
+- **A copy that fails** (a file in use): `update_failed.txt` says why and the old build number stays, so the window offers
+  the update again but does not retry it on its own (`last_attempt.txt`); **Check for updates** retries.
+
+**Publishing an update** = a GitHub release with both files (see Making a release). The private key lives outside this
+repository on the release machine (`update_feed.py keygen` made it); without it no update can be signed, and a new key means
+a new MTDX that players install by hand.
+
+The developer test (not in this repository) runs `update.py` and the command against a local server that answers like
+GitHub (redirect, Range, a connection dropped half way), in a folder whose name has spaces, parentheses, `%` and non-Latin
+letters: signature, format and build checks, the game-running refusal, damaged / wrong / unsafe zips, the wait, the copy
+order and the failed-copy path; then the frozen `MTDX.exe` end to end.
+
 ## Making a release
 
 Input: a Windows player build of the RTDX PC rebuild (`RTDX.exe` + `RTDX_Data`, with `RtdxPc/PcLayout.cs`), its Windows
@@ -83,7 +114,12 @@ py -3.13 -m pip install -r converter/requirements.txt -r release/requirements-bu
 py -3.13 -I release/build_exe.py                         # -> build/dist/MTDX (MTDX.exe + mtdx_runtime/)
 py -3.13 -I release/make_release.py PLAYER_DIR PLAYER_BUNDLES DUMP OUT_DIR --exe build/dist/MTDX
 py -3.13 -I release/zip_release.py OUT_DIR               # -> MTDX-<version>-win64.zip
+py -3.13 -I release/update_feed.py make MTDX-<version>-win64.zip KEYFILE   # -> mtdx-update.json (signed) next to it
 ```
+
+Upload **both** the zip and `mtdx-update.json` to the release `v<version>` (`update_feed.py make` prints the asset address
+it signed; `--tag` / `--url` change it). Every MTDX that updates itself installs that release at its next start.
+`update_feed.py show mtdx-update.json ZIP` checks a feed and that the zip is the one it names.
 
 `make_release.py` copies the player without its game data, strips the debug sections of `rtdx_native.dll` (MinGW
 `objcopy --strip-debug`; every loadable section is checked to keep its bytes), cuts the build machine's `.pdb` paths out of
