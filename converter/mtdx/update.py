@@ -348,7 +348,7 @@ def prepare_self_update(p, entry, log=print, progress=None, stop=None, restart=T
         if restart:
             f.write(f'cd /d "{q(p.root)}"\r\n'
                     f'start "" "{q(os.path.join(p.root, "MTDX.exe"))}"\r\n')
-    log(f'MTDX {entry.get("version", "")}: ready - MTDX closes, copies it in and starts again')
+    log(f'MTDX {entry.get("version", "")}: ready - MTDX closes, copies it in' + (' and starts again' if restart else ''))
     return cmd
 
 

@@ -65,6 +65,17 @@ made again only where the update needs it.
 | Keyboard Keys / Controller Buttons | A opens the list of actions; in it A = press the new key or button (Esc = cancel), X = clear, Y = defaults, B = back |
 
   Everything is applied when you leave Options and answer YES to the save question.
+- **Cheats**: **Others > Cheats** (below Options, in town and in dungeons). Each row is On / Off and takes effect at once;
+  all are Off until you turn them on. They are kept in the same `pc_settings.ini`.
+
+| Cheat | What it does |
+|---|---|
+| 500 HP | Your party members in the dungeon have 500 HP. Their real HP is kept: turned Off, they are back to it, and saves hold the real value |
+| EXP x8 | Rescue Team experience (rank points) is multiplied by 8; Pokémon experience is unchanged |
+| No Hunger | The Belly stays full |
+| PP MAX | Moves do not use up PP |
+| Unlimited Money | The money in your bag never goes down (it does not add money) |
+
 - **Fast-forward**: left-stick click (controller) or F (keyboard); each press steps 1x -> 2x -> 4x -> 8x -> 1x.
 
 ## Controls (default)
