@@ -50,8 +50,8 @@ Measured on the Rescue Team DX dump (version 1.0.2: the base game with its 1.0.2
 What the release side prepares so the dump's files fit our player (`release/make_player_base.py`):
 
 - **Script registry.** The dump's player files point into `globalgamemanagers.assets` by Switch path IDs (every
-  MonoBehaviour's `m_Script`, the files' script-type tables, ResourceManager dependencies). Our Mono build numbered its
-  registry its own way (1,945 objects against the Switch build's 1,272). Our registry is renumbered: every MonoScript whose
+  MonoBehaviour's `m_Script`, the files' script-type tables, ResourceManager dependencies). Our player build (IL2CPP since 0.4.0,
+  Mono before) numbers its registry its own way (1,945 objects in the Mono build against the Switch build's 1,272). Our registry is renumbered: every MonoScript whose
   class (namespace + name + assembly) the Switch registry holds takes the Switch path ID (Unity writes two objects for 77
   package classes in both builds: paired in order), Sprites-Default and its shaders likewise; the rest go above the Switch
   range. MonoManager, GraphicsSettings and ResourceManager follow the new IDs. Every reference of the dump's player files

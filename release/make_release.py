@@ -36,6 +36,11 @@ EXCLUDE_SUFFIXES = ('.log', '.pdb')
 GAME_TYPES = {'Texture2D', 'Cubemap', 'Mesh', 'AudioClip', 'VideoClip', 'TextAsset', 'MonoBehaviour', 'AnimationClip', 'Sprite',
               'Font', 'GameObject'}
 SERIALIZED = ('RTDX_Data/globalgamemanagers.assets',)
+# Unity runtime files that are equal to a dump file only because the game was built with the same Unity (2018.3.12f1, IL2CPP):
+# mscorlib.dll-resources.dat = the embedded resources (exception messages) of Unity's own unityaot mscorlib.dll, written by
+# il2cpp.exe into every IL2CPP player (checked 2026-11-07: its bytes occur in Editor/Data/MonoBleedingEdge/lib/mono/unityaot/
+# mscorlib.dll). Not game data; listed in audit.txt as allowed.
+UNITY_RUNTIME_SAME_AS_DUMP = {'RTDX_Data/il2cpp_data/Resources/mscorlib.dll-resources.dat'}
 
 
 def sha1(path):
@@ -216,6 +221,7 @@ def local_markers(*paths):
 def audit(out, dump, markers=()):
     import UnityPy
     problems = []
+    allowed = []
     dump_hashes = {}
     sizes = {}
     for rel in rel_files(dump):
@@ -236,7 +242,10 @@ def audit(out, dump, markers=()):
             if q not in dump_hashes:
                 dump_hashes[q] = sha1(q)
             if dump_hashes[q] == sha1(p):
-                problems.append(f'{rel} has the bytes of dump file {q}')
+                if rel in UNITY_RUNTIME_SAME_AS_DUMP:
+                    allowed.append(f'{rel} = dump file {q}: Unity runtime file, allowed')
+                else:
+                    problems.append(f'{rel} has the bytes of dump file {q}')
         if rel in SERIALIZED or (rel.startswith('RTDX_Data/') and '/' not in rel[len('RTDX_Data/'):]
                                  and not rel.endswith(('.info', '.config'))):
             try:
@@ -247,7 +256,7 @@ def audit(out, dump, markers=()):
                 if o.type.name in GAME_TYPES:
                     problems.append(f'{rel}: holds a {o.type.name} object')
                     break
-    return n, problems
+    return n, problems, allowed
 
 
 def run(args):
@@ -303,10 +312,11 @@ def main():
         shutil.copyfile(os.path.join(REPO, f), os.path.join(out, f))
     with open(os.path.join(out, 'mtdx', 'release.json'), 'w', encoding='utf-8') as f:
         json.dump(info, f, indent=1)
-    files, problems = audit(out, dump, markers)
+    files, problems, allowed = audit(out, dump, markers)
     rep = os.path.join(out, 'mtdx', 'audit.txt')
     with open(rep, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(f'{files} release files; {len(problems)} problems\n' + '\n'.join(problems) + '\n')
+        f.write(f'{files} release files; {len(problems)} problems\n' + '\n'.join(problems) + '\n'
+                + ''.join(f'allowed: {x}\n' for x in allowed))
     print(f'audit: {files} files, {len(problems)} problems -> {rep}')
     for p in problems[:20]:
         print('  ', p)
