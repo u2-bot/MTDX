@@ -5,8 +5,8 @@ terms:
 
 | Component | Where in a release | Terms |
 |---|---|---|
-| Unity 2018.3 runtime (player, IL2CPP runtime, built-in resources, UnityEngine code) | `RTDX.exe`, `UnityPlayer.dll`, `UnityCrashHandler64.exe`, `GameAssembly.dll`, `RTDX_Data/il2cpp_data/`, `RTDX_Data/Resources/` | Unity Technologies; distributed as part of a game built with Unity, under Unity's terms |
-| Mono class libraries (compiled to native code by IL2CPP) | `GameAssembly.dll`, `RTDX_Data/il2cpp_data/` | MIT and the licenses of the Mono project |
+| Unity 2018.3 runtime (player, built-in resources, UnityEngine code) | `RTDX.exe`, `UnityPlayer.dll`, `UnityCrashHandler64.exe`, `GameAssembly.dll`, `RTDX_Data/il2cpp_data/`, `RTDX_Data/Resources/` | Unity Technologies; distributed as part of a game built with Unity, under Unity's terms |
+| Mono class libraries | `GameAssembly.dll`, `RTDX_Data/il2cpp_data/` | MIT and the licenses of the Mono project |
 | WinPixEventRuntime | `WinPixEventRuntime.dll` | Microsoft, distributed with Unity's Windows player |
 | Unity packages (uGUI, Timeline, TextMesh Pro, Cinemachine) | `GameAssembly.dll` | Unity Companion License |
 | DOTween | `GameAssembly.dll` | Copyright Demigiant |
