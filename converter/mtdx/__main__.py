@@ -35,18 +35,59 @@ def opt(args, name, default=None):
     return default
 
 
+class _ConsoleOut:
+    """Where the console commands print: the console MTDX.exe attached to, or the stdout / stderr it was given. Some
+    parents hand over an output that later refuses writes (OSError 22: a hidden console, or a PowerShell pipe closed
+    because PowerShell does not wait for a windowed program); then everything from that line on goes to
+    mtdx/state/console.log instead of stopping the command."""
+
+    def __init__(self, root, f):
+        self.root = root
+        self.f = f
+
+    def _fallback(self):
+        try:
+            self.f.close()
+        except OSError:
+            pass
+        self.f = _log_file(self.root)
+
+    def write(self, s):
+        try:
+            return self.f.write(s)
+        except OSError:
+            self._fallback()
+            return self.f.write(s)
+
+    def flush(self):
+        try:
+            self.f.flush()
+        except OSError:
+            self._fallback()
+
+    def __getattr__(self, name):
+        return getattr(self.f, name)
+
+
+def _log_file(root):
+    d = os.path.join(root, 'mtdx', 'state')
+    os.makedirs(d, exist_ok=True)
+    return open(os.path.join(d, 'console.log'), 'a', buffering=1, encoding='utf-8', errors='replace')
+
+
 def attach_console(root):
     """MTDX.exe is built windowed (no console for the window); the console commands print to the console they ran from,
-    or - started without one - to mtdx/state/console.log."""
+    or - started without one, or with an output that refuses writes - to mtdx/state/console.log."""
     if sys.stdout is not None:
+        sys.stdout = _ConsoleOut(root, sys.stdout)
+        if sys.stderr is not None:
+            sys.stderr = _ConsoleOut(root, sys.stderr)
         return
     import ctypes
     if ctypes.windll.kernel32.AttachConsole(-1):
-        sys.stdout = open('CONOUT$', 'w', buffering=1, encoding='utf-8', errors='replace')
+        sys.stdout = _ConsoleOut(root, open('CONOUT$', 'w', buffering=1, encoding='utf-8', errors='replace'))
     else:
-        d = os.path.join(root, 'mtdx', 'state')
-        os.makedirs(d, exist_ok=True)
-        sys.stdout = open(os.path.join(d, 'console.log'), 'a', buffering=1, encoding='utf-8', errors='replace')
+        sys.stdout = _log_file(root)
     sys.stderr = sys.stdout
 
 
